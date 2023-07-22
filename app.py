@@ -54,6 +54,8 @@ def get_df(data_set) -> pd.DataFrame:
 evictionsDF = get_df("evictions")
 
 counties = evictionsDF["county"].unique().tolist()
+min_date = datetime.date(min(evictionsDF['filed_date']))
+max_date = datetime.date(max(evictionsDF['filed_date']))
 
 st.set_page_config(
     page_title="Portland Metro Evictions",
@@ -64,15 +66,26 @@ st.set_page_config(
 )
 
 with st.sidebar:
+    st.markdown("Select any or all of the Portland Metro counties and a date range for evictions filed in county courts")
+    
     selected_counties = st.multiselect(
         "County", counties, ["Multnomah", "Washington", "Clackamas"]
     )
 
     start_date = st.date_input(
-        "Filed Start Date", pd.Timestamp("today") - timedelta(days=30)
+        "Filed Start Date", pd.Timestamp("today") - timedelta(days=30), help=f"latest data available is {min_date}"
     )
 
-    end_date = st.date_input("Filed End Date", pd.Timestamp("today"))
+    end_date = st.date_input("Filed End Date", pd.Timestamp("today"), help=f"latest data available is {max_date}")
+
+    st.caption("""
+        We gather data from Multnomah, Washington, and Clackamas County Eviction Court Filings. These counts are a total number of evictions filed, not necessarily displacements. However, most filed evictions do result in a displacement through: 
+          - An informal landlord-tenant agreement to move out (case-dismissed)
+          - A court-official landlord-tenant agreement to move out (case-dismissed), OR
+          - A court-ordered judgment of eviction (eviction on record)
+    """)
+
+    st.info("The Clackamas County data is incomplete, but we still want to track what we can")
 
 
 date_range_days = end_date - start_date
@@ -128,7 +141,9 @@ st.metric(
     value=format(total_evictions, ",d"),
     delta=f"{evictions_delta}%",
     delta_color="inverse",
+    help='change is over the previous period of the same number of days within the selected date range'
 )
+
 
 col1, col2, col3 = st.columns(3)
 
