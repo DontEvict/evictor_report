@@ -141,7 +141,7 @@ st.metric(
     value=format(total_evictions, ",d"),
     delta=f"{evictions_delta}%",
     delta_color="inverse",
-    help='change is over the previous period of the same number of days within the selected date range'
+    help=f'change is over the {date_range_days.days} day period preceding the selected {date_range_days.days} day range'
 )
 
 
