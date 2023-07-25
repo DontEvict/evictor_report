@@ -65,6 +65,8 @@ st.set_page_config(
     menu_items={},
 )
 
+range_days = 90
+
 with st.sidebar:
     st.markdown("Select any or all of the Portland Metro counties and a date range for evictions filed in county courts")
     
@@ -73,7 +75,7 @@ with st.sidebar:
     )
 
     start_date = st.date_input(
-        "Filed Start Date", pd.Timestamp("today") - timedelta(days=30), help=f"latest data available is {min_date}"
+        "Filed Start Date", pd.Timestamp("today") - timedelta(days=range_days), help=f"latest data available is {min_date}"
     )
 
     end_date = st.date_input("Filed End Date", pd.Timestamp("today"), help=f"latest data available is {max_date}")
@@ -102,6 +104,10 @@ evictionsDF = evictionsDF[
     (evictionsDF["filed_date"].dt.date >= start_date)
     & (evictionsDF["filed_date"].dt.date <= end_date)
 ]
+
+eviction_daily_count = evictionsDF.groupby(by=['filed_date']).count()
+eviction_daily_count = eviction_daily_count['case_code']
+
 total_evictions = len(evictionsDF.index)
 
 evictions_delta = round(
@@ -144,14 +150,17 @@ st.metric(
     help=f'change is over the {date_range_days.days} day period preceding the selected {date_range_days.days} day range'
 )
 
+with st.container():
 
-col1, col2, col3 = st.columns(3)
+    col1, col2, col3 = st.columns(3)
 
-with col1:
-    st.dataframe(top_ll_evictorsDF)
+    with col1:
+        st.dataframe(top_ll_evictorsDF)
 
-with col2:
-    st.dataframe(top_pm_evictorsDF)
+    with col2:
+        st.dataframe(top_pm_evictorsDF)
 
-with col3:
-    st.dataframe(top_lawyer_evictorsDF)
+    with col3:
+        st.dataframe(top_lawyer_evictorsDF)
+
+    st.bar_chart(eviction_daily_count)
